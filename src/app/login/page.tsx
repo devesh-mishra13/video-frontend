@@ -29,7 +29,7 @@ const AuthForm = () => {
 
     try {
       const response = await fetch(
-        isSignup ? 'http://localhost:8000/signup' : 'http://localhost:8000/login',
+        isSignup ? 'https://video-backend-13.onrender.com/signup' : 'https://video-backend-13.onrender.com/login',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

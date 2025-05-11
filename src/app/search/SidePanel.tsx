@@ -40,7 +40,7 @@ const SidePanel = () => {
   // Fetch chats for user
   const fetchChats = async (uid: string) => {
     try {
-      const res = await axios.get(`http://localhost:8000/user/${uid}/chats`);
+      const res = await axios.get(`https://video-backend-13.onrender.com/user/${uid}/chats`);
       setExistingChats(res.data.chats);
     } catch (err) {
       console.error('Failed to fetch chats', err);
@@ -50,7 +50,7 @@ const SidePanel = () => {
   // Create a new chat
   const handleNewChat = async () => {
     try {
-      const res = await axios.post('http://localhost:8000/chat/create', {
+      const res = await axios.post('https://video-backend-13.onrender.com/chat/create', {
         user_id: userId,
         chat_name: `Chat ${existingChats.length + 1}`,
       });
