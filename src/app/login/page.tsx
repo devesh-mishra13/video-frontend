@@ -27,25 +27,40 @@ const AuthForm = () => {
       return;
     }
 
-    // Sending data to the backend
     try {
       const response = await fetch(
-            isSignup ? 'http://localhost:8000/signup' : 'http://localhost:8000/login',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
-            }
-            );
+        isSignup ? 'http://localhost:8000/signup' : 'http://localhost:8000/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            isSignup ? { name, email, password } : { email, password }
+          ),
+        }
+      );
+
       const data = await response.json();
 
-      if (response.status != 200) {
+      if (response.status !== 200) {
         setError(data.error);
       } else {
-        // Redirect using window.location
-        window.location.href = '/'; // Redirect to dashboard after successful login/signup
+        // Save token with expiry of 30 days
+        const accessToken = data.access_token;
+
+        if (accessToken) {
+          const now = new Date();
+          const expiryTime = now.getTime() + 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+          const tokenData = {
+            value: accessToken,
+            expiry: expiryTime,
+          };
+          localStorage.setItem('access_token', JSON.stringify(tokenData));
+        }
+
+        // Redirect to homepage/dashboard
+        window.location.href = '/';
       }
-    } catch (error) {
+    } catch (err) {
       setError('Something went wrong. Please try again later.');
     }
   };

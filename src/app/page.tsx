@@ -1,8 +1,16 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { jwtDecode } from 'jwt-decode';
+
+
+interface MyToken {
+  email: string;
+  exp: number;
+  name?: string; // if you add it later
+}
 
 const FeatureSection = ({ title, description, imageSrc, imageOnLeft = true }: { title: string; description: string; imageSrc: string; imageOnLeft?: boolean }) => {
   return (
@@ -86,22 +94,67 @@ const InnovationSection = () => {
 };
 
 const HeroSection = () => {
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+  const tokenString = localStorage.getItem('access_token');
+  if (!tokenString) return;
+
+  try {
+    const tokenData = jwtDecode<MyToken>(tokenString);
+    console.log(tokenData);
+
+    if (Date.now() > tokenData.exp * 1000) {
+      localStorage.removeItem('access_token');
+      return;
+    }
+
+    setUsername(tokenData.email);
+  } catch (err) {
+    console.error('Invalid token', err);
+  }
+}, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    window.location.href = '/login';
+  };
+
   return (
     <main className="bg-black">
       {/* HERO */}
       <section className="relative bg-gradient-to-br from-black via-gray-900 to-black h-screen flex items-center justify-center text-white overflow-hidden">
         <div className="absolute inset-0 z-0" />
 
-        {/* Login/Signup Button */}
+        {/* Top Right: Login or Profile */}
         <div className="absolute top-6 right-6 z-10">
-          <Link href="/login" passHref>
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 via-purple-700 to-indigo-600 rounded-full text-white font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
-            >
-              <span className="text-lg">Login / Signup</span>
-            </motion.div>
-          </Link>
+          {username ? (
+            <div className="relative group">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="px-6 py-3 bg-gray-800 rounded-full text-white font-semibold shadow hover:shadow-xl cursor-pointer"
+              >
+                👤 {username}
+              </motion.div>
+              <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                <button
+                  onClick={handleLogout}
+                  className="block w-full px-4 py-2 hover:bg-gray-100 text-left"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link href="/login" passHref>
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 via-purple-700 to-indigo-600 rounded-full text-white font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+              >
+                <span className="text-lg">Login / Signup</span>
+              </motion.div>
+            </Link>
+          )}
         </div>
 
         <motion.div
@@ -129,7 +182,6 @@ const HeroSection = () => {
         </motion.div>
       </section>
 
-      {/* FEATURE SECTIONS */}
       <FeatureSection
         title="How It Works"
         description="We break down each video into frames, extract their visual features, and compare them with the uploaded image using deep learning and vector similarity."
@@ -147,10 +199,7 @@ const HeroSection = () => {
         imageSrc="/generated-image (4).png"
       />
 
-      {/* USE CASE SECTION */}
       <UseCaseSection />
-
-      {/* NEW EXTENDED SECTION */}
       <InnovationSection />
     </main>
   );
