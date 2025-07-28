@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { jwtDecode } from 'jwt-decode';
-
+import { useRouter } from 'next/navigation'; // For Next 13+ with `app` directory
+import { v4 as uuidv4 } from 'uuid';
 
 interface MyToken {
-  email: string;
+  sub: string; // This is the username returned by Spring Boot
   exp: number;
-  name?: string; // if you add it later
 }
 
 const FeatureSection = ({ title, description, imageSrc, imageOnLeft = true }: { title: string; description: string; imageSrc: string; imageOnLeft?: boolean }) => {
@@ -95,8 +95,15 @@ const InnovationSection = () => {
 
 const HeroSection = () => {
   const [username, setUsername] = useState<string | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
+  const handleStartSearch = () => {
+    const uid = uuidv4();
+    router.push(`/search/${uid}`);
+  };
+
+
+ useEffect(() => {
   const tokenString = localStorage.getItem('access_token');
   if (!tokenString) return;
 
@@ -109,11 +116,12 @@ const HeroSection = () => {
       return;
     }
 
-    setUsername(tokenData.email);
+    setUsername(tokenData.sub); // ✅ Use `sub` here instead of `email`
   } catch (err) {
     console.error('Invalid token', err);
   }
 }, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -124,6 +132,28 @@ const HeroSection = () => {
     <main className="bg-black">
       {/* HERO */}
       <section className="relative bg-gradient-to-br from-black via-gray-900 to-black h-screen flex items-center justify-center text-white overflow-hidden">
+        <motion.div
+  className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10"
+  initial={{ opacity: 0, y: -10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{
+    repeat: Infinity,
+    repeatType: 'reverse',
+    duration: 1.2,
+  }}
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={4}
+    stroke="white"
+    className="w-8 h-8 animate-bounce"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+</motion.div>
+
         <div className="absolute inset-0 z-0" />
 
         {/* Top Right: Login or Profile */}
@@ -170,15 +200,13 @@ const HeroSection = () => {
           <p className="max-w-xl mx-auto text-lg md:text-xl text-gray-400 mb-10 leading-relaxed">
             Upload an image frame and let our AI instantly discover the most similar video scene across different video clips. It's smart. It's fast. It's powerful.
           </p>
-
-          <Link href="/search" passHref>
             <motion.div
               whileHover={{ scale: 1.1 }}
+              onClick={handleStartSearch}
               className="mx-auto w-fit px-6 py-3 bg-gradient-to-r from-blue-600 via-purple-700 to-indigo-600 rounded-full text-white font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
             >
               <span className="text-lg">🚀 Start Your Search</span>
             </motion.div>
-          </Link>
         </motion.div>
       </section>
 

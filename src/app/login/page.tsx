@@ -6,8 +6,7 @@ import Link from 'next/link';
 const AuthForm = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    username: '',
     password: '',
     confirmPassword: '',
   });
@@ -20,7 +19,7 @@ const AuthForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, email, password, confirmPassword } = formData;
+    const { username, password, confirmPassword } = formData;
 
     if (isSignup && password !== confirmPassword) {
       setError("Passwords don't match");
@@ -29,36 +28,28 @@ const AuthForm = () => {
 
     try {
       const response = await fetch(
-        isSignup ? 'https://video-backend-13.onrender.com/signup' : 'https://video-backend-13.onrender.com/login',
+        isSignup
+          ? 'https://auth-api-java.onrender.com/api/auth/register'
+          : 'https://auth-api-java.onrender.com/api/auth/login',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(
-            isSignup ? { name, email, password } : { email, password }
-          ),
+          body: JSON.stringify({ username, password }),
         }
       );
 
       const data = await response.json();
 
-      if (response.status !== 200) {
-        setError(data.error);
-      } else {
-        // Save token with expiry of 30 days
-        const accessToken = data.access_token;
+      if (!response.ok) {
+        setError(data.message || 'Something went wrong.');
+        return;
+      }
 
-        if (accessToken) {
-          const now = new Date();
-          const expiryTime = now.getTime() + 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
-          const tokenData = {
-            value: accessToken,
-            expiry: expiryTime,
-          };
-          localStorage.setItem('access_token', JSON.stringify(tokenData));
-        }
-
-        // Redirect to homepage/dashboard
+      if (data.token) {
+        localStorage.setItem('access_token', data.token);
         window.location.href = '/';
+      } else {
+        setError('Token not received.');
       }
     } catch (err) {
       setError('Something went wrong. Please try again later.');
@@ -80,28 +71,13 @@ const AuthForm = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {isSignup && (
-            <div>
-              <label htmlFor="name" className="text-lg text-gray-400">Full Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full p-3 mt-2 text-lg bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-          )}
-
           <div>
-            <label htmlFor="email" className="text-lg text-gray-400">Email Address</label>
+            <label htmlFor="username" className="text-lg text-gray-400">Username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               className="w-full p-3 mt-2 text-lg bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
